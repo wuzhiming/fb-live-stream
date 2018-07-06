@@ -88,7 +88,7 @@ function _handleAndroid(options) {
                 Fs.writeFileSync(manifestPath, builder.buildObject(data));
 
                 let libPath = Path.join(options.dest, 'frameworks/runtime-src/proj.android-studio/app/libs');
-                let srcLibPath = Editor.url('packages://facebook-sdk/live/libs/android');
+                let srcLibPath = Editor.url('packages://fb-live-stream/live/libs/android');
 
                 Fs.copySync(srcLibPath, libPath);
                 resolve();
@@ -111,7 +111,7 @@ function _handleIOS(options) {
         let config = Editor._projectProfile.data['facebook'];
         //第一步，拷贝framework
         let libPath = Path.join(options.dest, 'frameworks/runtime-src/proj.ios_mac/frameworks');
-        let srcLibPath = Editor.url('packages://facebook-sdk/live/libs/ios');
+        let srcLibPath = Editor.url('packages://fb-live-stream/live/libs/ios');
         Fs.copySync(srcLibPath, libPath);
 
         //第二步，为工程添加framework索引
