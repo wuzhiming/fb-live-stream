@@ -18,11 +18,30 @@ function _handleAndroid(options) {
         let gradlePropertyPath = Path.join(options.dest, 'frameworks/runtime-src/proj.android-studio/gradle.properties');
         if (Fs.existsSync(gradlePropertyPath)) {
             let content = Fs.readFileSync(gradlePropertyPath, 'utf-8');
-            content = content.replace(/USE_FACEBOOK_SDK=.*/, `USE_FACEBOOK_SDK=true`);
             content = content.replace(/FACEBOOK_APP_ID=.*/, `FACEBOOK_APP_ID=fb${config.appID}`);
             Fs.writeFileSync(gradlePropertyPath, content);
         } else {
             Editor.error('cant find gradle.properties at ', gradlePropertyPath);
+            reject();
+            return;
+        }
+
+        //修改build.gradle文件
+        let buildGradle = Path.join(options.dest, 'frameworks/runtime-src/proj.android-studio/app/build.gradle');
+        if (Fs.existsSync(buildGradle)) {
+            let content = Fs.readFileSync(buildGradle, 'utf-8');
+            content = content.replace(/dependencies\s*\{[^\}]+}/, (str) => {
+                let substr = str.substr(0, str.length - 1);
+                substr += "    implementation 'com.facebook.android:facebook-login:4.+'";
+                substr += "\n}";
+                return substr;
+            });
+
+            content += "\nandroid.defaultConfig.manifestPlaceholders = [facebookAppId:FACEBOOK_APP_ID]";
+
+            Fs.writeFileSync(buildGradle, content);
+        } else {
+            Editor.error('cant find build.gradle at ', buildGradle);
             reject();
             return;
         }
