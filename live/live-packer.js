@@ -32,12 +32,15 @@ function _handleAndroid(options) {
             let content = Fs.readFileSync(buildGradle, 'utf-8');
             content = content.replace(/dependencies\s*\{[^\}]+}/, (str) => {
                 let substr = str.substr(0, str.length - 1);
+                if (str.indexOf('facebook-login') != -1) return str;//如果已经添加就不需要重复添加了
                 substr += "    implementation 'com.facebook.android:facebook-login:4.+'";
                 substr += "\n}";
                 return substr;
             });
 
-            content += "\nandroid.defaultConfig.manifestPlaceholders = [facebookAppId:FACEBOOK_APP_ID]";
+            if (content.indexOf('android.defaultConfig.manifestPlaceholders') == -1) {
+                content += "\nandroid.defaultConfig.manifestPlaceholders = [facebookAppId:FACEBOOK_APP_ID]";
+            }
 
             Fs.writeFileSync(buildGradle, content);
         } else {
