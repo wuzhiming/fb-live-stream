@@ -240,9 +240,9 @@ function _handleIOS(options) {
 
 function handleLive(options) {
     let handle;
-    if (options.actualPlatform === 'Android') {
+    if (options.actualPlatform.toLowerCase() === 'android') {
         handle = _handleAndroid(options);
-    } else if (options.actualPlatform === "iOS") {
+    } else if (options.actualPlatform.toLowerCase() === "ios") {
         handle = _handleIOS(options);
     } else {
         handle = Promise.resolve();
