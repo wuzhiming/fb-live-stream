@@ -22,7 +22,7 @@ class FBLiveSteam {
         this._useMic = !!val;
         //call to native
         if (!cc.sys.isNative) return;
-        if (cc.sys.os == cc.sys.OS_ANDROID) {
+        if (cc.sys.os == cc.sys.OS_ANDROID) {//android is not support now
             // let methodName = "destroyAd";
             // let className = "org.cocos2dx.javascript/FacebookLive";
             // let methodSignature = "(Ljava/lang/String;)V";
@@ -40,7 +40,7 @@ class FBLiveSteam {
         this._useCamera = !!val;
         //call to native
         if (!cc.sys.isNative) return;
-        if (cc.sys.os == cc.sys.OS_ANDROID) {
+        if (cc.sys.os == cc.sys.OS_ANDROID) {//android is not support now
             // let methodName = "destroyAd";
             // let className = "org.cocos2dx.javascript/FacebookLive";
             // let methodSignature = "(Ljava/lang/String;)V";
