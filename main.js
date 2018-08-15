@@ -4,7 +4,7 @@ const Fs = require('fire-fs');
 const xml2js = require("xml2js");
 const xcode = require('xcode');
 const plist = require('plist');
-const {android, ios} = require('../../share/native-packer');
+const {android, ios} = Editor.require('app://editor/core/native-packer');
 /**
  * 添加 facebook live stream 的 sdk 到 android 工程
  * @param options
@@ -52,7 +52,7 @@ async function _handleAndroid(options) {
 
     let fileList = ['FacebookLive.java'];
     fileList.forEach((file) => {
-        androidPacker.copyFile(Path.join(srcAndroidPath, file), Path.join(destAndroidPath, file));
+        androidPacker.ensureFile(Path.join(srcAndroidPath, file), Path.join(destAndroidPath, file));
     });
 
     //首先加载一下AndroidManifest.xml(异步)
@@ -117,7 +117,7 @@ async function _handleIOS(options) {
     //第一步，拷贝framework
     let libPath = Path.join(options.dest, 'frameworks/runtime-src/proj.ios_mac/frameworks');
     let srcLibPath = Editor.url('packages://fb-live-stream/libs/ios/framework');
-    iosPacker.copyFile(srcLibPath, libPath);
+    iosPacker.ensureFile(srcLibPath, libPath);
 
     //第二步，为工程添加framework索引
     let projectPath = Path.join(options.dest, `frameworks/runtime-src/proj.ios_mac/${options.projectName}.xcodeproj/project.pbxproj`);
@@ -179,7 +179,7 @@ async function _handleIOS(options) {
     let destSupportPath = Path.join(options.dest, 'frameworks/runtime-src/proj.ios_mac/ios');
     let fileList = ['FacebookLive.mm', 'FacebookLive.h'];
     fileList.forEach((file) => {
-        iosPacker.copyFile(Path.join(srcSupportPath, file), Path.join(destSupportPath, file));
+        iosPacker.ensureFile(Path.join(srcSupportPath, file), Path.join(destSupportPath, file));
     });
 
     //加入Facebook文件的引用
