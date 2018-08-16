@@ -11,36 +11,13 @@ const {android, ios} = Editor.require('app://editor/core/native-packer');
  * @returns {Promise}
  */
 async function _handleAndroid(options) {
+    Editor.log('Facebook Live Stream --> adding ALive Stream Android support');
     let config = Editor._projectProfile.data['facebook'];
 
     let androidPacker = new android(options);
 
-    //修改gradle.properties
-    let gradlePropertyPath = Path.join(options.dest, 'frameworks/runtime-src/proj.android-studio/gradle.properties');
-    if (Fs.existsSync(gradlePropertyPath)) {
-        let content = Fs.readFileSync(gradlePropertyPath, 'utf-8');
-        content = content.replace(/FACEBOOK_APP_ID=.*/, `FACEBOOK_APP_ID=fb${config.appID}`);
-        Fs.writeFileSync(gradlePropertyPath, content);
-    } else {
-        Editor.error('cant find gradle.properties at ', gradlePropertyPath);
-        return Promise.reject();
-    }
-
     //修改build.gradle文件
     androidPacker.addDependence('com.facebook.android:facebook-login', '4.+');
-
-    let buildGradle = Path.join(options.dest, 'frameworks/runtime-src/proj.android-studio/app/build.gradle');
-    if (Fs.existsSync(buildGradle)) {
-        let content = Fs.readFileSync(buildGradle, 'utf-8');
-        if (content.indexOf('android.defaultConfig.manifestPlaceholders') == -1) {
-            content += "\nandroid.defaultConfig.manifestPlaceholders = [facebookAppId:FACEBOOK_APP_ID]";
-        }
-
-        Fs.writeFileSync(buildGradle, content);
-    } else {
-        Editor.error('cant find build.gradle at ', buildGradle);
-        return Promise.reject();
-    }
 
     //添加aar文件
     let srcLibPath = Editor.url('packages://fb-live-stream/libs/android/facebook-livestream.aar');
@@ -49,22 +26,16 @@ async function _handleAndroid(options) {
     //拷贝android文件
     let srcAndroidPath = Editor.url('packages://fb-live-stream/libs/android');
     let destAndroidPath = Path.join(options.dest, 'frameworks/runtime-src/proj.android-studio/app/src/org/cocos2dx/javascript');
-
     let fileList = ['FacebookLive.java'];
     fileList.forEach((file) => {
         androidPacker.ensureFile(Path.join(srcAndroidPath, file), Path.join(destAndroidPath, file));
     });
 
-    //首先加载一下AndroidManifest.xml(异步)
-    await androidPacker.readAndroidManifest().catch((e)=>{
-        Editor.log("read AndroidManifest.xml fail ", e);
+    //添加AndroidManifest.xml的一些字段
+    await androidPacker.addManifestApplicationConfig('meta-data', {
+        "$": {"android:name": "com.facebook.sdk.ApplicationId", "android:value": "@string/facebook_app_id"}
     });
-
-    let fbMetaData = {
-        "$": {"android:name": "com.facebook.sdk.ApplicationId", "android:value": "${facebookAppId}"}
-    };
-
-    let fbReceiver = {
+    await androidPacker.addManifestApplicationConfig('receiver', {
         "$": {
             "android:name": "com.facebook.livestreaming.LiveStreamBroadcastReceiver",
             "android:exported": true
@@ -74,15 +45,23 @@ async function _handleAndroid(options) {
                 {"$": {"android:name": "com.facebook.livestreaming.status"}},
                 {"$": {"android:name": "com.facebook.livestreaming.error"}}]
         }
-    };
+    });
 
-    let modifyList = [
-        {key: 'meta-data', data: fbMetaData},
-        {key: 'receiver', data: fbReceiver},
-    ];
+    //添加两个字段到strings.xml
+    await androidPacker.addStringToStringXML({
+        "$": {
+            name: "facebook_app_id",
+            translatable: "false"
+        },
+        "_": config.appID
+    });
 
-    modifyList.forEach((item) => {
-        androidPacker.addManifestApplicationConfig(item.key, item.data);
+    await androidPacker.addStringToStringXML({
+        "$": {
+            name: "fb_login_protocol_scheme",
+            translatable: "false"
+        },
+        "_": `fb${config.appID}`
     });
 
     //拷贝js资源，并加入require
@@ -110,6 +89,7 @@ function _copyFsupportFile(options, packer) {
  * @returns {Promise}
  */
 async function _handleIOS(options) {
+    Editor.log('Facebook Live Stream --> adding ALive Stream iOS support');
     let config = Editor._projectProfile.data['facebook'];
 
     let iosPacker = new ios(options);
@@ -186,8 +166,43 @@ async function _handleIOS(options) {
     iosPacker.addFileToProject('ios/FacebookLive.h', 'ios');
     iosPacker.addFileToCompileSource('ios/FacebookLive.mm', `${options.projectName}-mobile`, 'ios');
 
-    //第五步，拷贝js资源，并加入require
+    //第五步，修改AppController.mm的代码，添加一个初始化参数
+    let contentPath = Path.join(options.dest, 'frameworks/runtime-src/proj.ios_mac/ios/AppController.mm');
+    let command = '[[FBSDKApplicationDelegate sharedInstance] application:application didFinishLaunchingWithOptions:launchOptions];';
+    let head = '#import <FBSDKCoreKit/FBSDKCoreKit.h>';
+
+    let content = Fs.readFileSync(contentPath, 'utf-8');
+    if (content) {
+        content = _addStringIfNotExist(content, head, new RegExp('using namespace cocos2d;'), 0);
+        content = _addStringIfNotExist(content, command, new RegExp('app->start\\(\\);'), 1);
+        Fs.writeFileSync(contentPath, content);
+    }
+
+    //第六步，拷贝js资源，并加入require
     _copyFsupportFile(options, iosPacker);
+}
+/**
+ * 增加一些代码，如果代码不存在的话
+ * @param content 要查找的内容
+ * @param str 要添加的字符串
+ * @param reg 用来匹配字符串的正则
+ * @param tabNum 要多少个缩进，只是让代码美观
+ * @returns {*}
+ * @private
+ */
+function _addStringIfNotExist(content, str, reg, tabNum) {
+    let result = content;
+    tabNum = tabNum || 0;
+    if (result.indexOf(str) === -1) {
+        let tab = "";
+        for (let i = 0; i < tabNum; i++) {
+            tab += "    ";
+        }
+        result = result.replace(reg, (sub) => {
+            return str + "\n\n" + tab + sub;
+        });
+    }
+    return result;
 }
 
 async function handleFiles(options, cb) {
@@ -199,11 +214,11 @@ async function handleFiles(options, cb) {
 
     if (options.actualPlatform.toLowerCase() === 'android') {
         await _handleAndroid(options).catch((e) => {
-            Editor.log("Some error have occurred while adding Facebook Live Stream Android SDK ");
+            Editor.log("Some error have occurred while adding Facebook Live Stream Android SDK ", e);
         });
     } else if (options.actualPlatform.toLowerCase() === "ios") {
         await _handleIOS(options).catch((e) => {
-            Editor.log("Some error have occurred while adding Facebook Live Stream iOS SDK ");
+            Editor.log("Some error have occurred while adding Facebook Live Stream iOS SDK ", e);
         });
     }
     cb && cb();
