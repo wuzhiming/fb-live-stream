@@ -205,12 +205,23 @@ function _addStringIfNotExist(content, str, reg, tabNum) {
     return result;
 }
 
+function trackEvent() {
+    let config = Editor._projectProfile.data['facebook'];
+    Editor.Metrics.trackEvent({
+        category: 'Facebook',
+        action: 'Facebook Live Stream APPID',
+        label: config.appID || "",
+    });
+}
+
 async function handleFiles(options, cb) {
     let config = Editor._projectProfile.data['facebook'];
     if (!config.enable || !config.live.enable) {
         cb && cb();
         return;
     }
+
+    trackEvent();
 
     if (options.actualPlatform.toLowerCase() === 'android') {
         await _handleAndroid(options).catch((e) => {
