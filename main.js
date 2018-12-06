@@ -207,6 +207,7 @@ function _addStringIfNotExist(content, str, reg, tabNum) {
 
 function trackEvent() {
     let config = Editor._projectProfile.data['facebook'];
+    if (!config.appID) return;
     Editor.Metrics.trackEvent({
         category: 'Facebook',
         action: 'Facebook Live Stream APPID',
