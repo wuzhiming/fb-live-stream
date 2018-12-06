@@ -217,7 +217,7 @@ function trackEvent() {
 
 async function handleFiles(options, cb) {
     let config = Editor._projectProfile.data['facebook'];
-    if (!config.enable || !config.live.enable) {
+    if (!config || !config.enable || !config.live.enable) {
         cb && cb();
         return;
     }
@@ -232,8 +232,7 @@ async function handleFiles(options, cb) {
         await _handleIOS(options).catch((e) => {
             Editor.log("Some error have occurred while adding Facebook Live Stream iOS SDK ", e);
         });
-    }
-    cb && cb();
+    }    cb && cb();
 }
 
 module.exports = {
