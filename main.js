@@ -211,7 +211,7 @@ function trackEvent() {
     Editor.Metrics.trackEvent({
         category: 'Facebook',
         action: 'Facebook Live Stream APPID',
-        label: config.appID || "",
+        label: config.appID,
     });
 }
 
@@ -232,7 +232,9 @@ async function handleFiles(options, cb) {
         await _handleIOS(options).catch((e) => {
             Editor.log("Some error have occurred while adding Facebook Live Stream iOS SDK ", e);
         });
-    }    cb && cb();
+    }
+
+    cb && cb();
 }
 
 module.exports = {
