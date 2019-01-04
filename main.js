@@ -215,6 +215,14 @@ function trackEvent() {
     });
 }
 
+function trackBuildEvent() {
+    Editor.Metrics.trackEvent({
+        category: 'Facebook',
+        action: 'Facebook Live Stream',
+        label: 'Build'
+    });
+}
+
 async function handleFiles(options, cb) {
     let config = Editor._projectProfile.data['facebook'];
     if (!config || !config.enable || !config.live.enable) {
@@ -222,9 +230,12 @@ async function handleFiles(options, cb) {
         return;
     }
 
-    trackEvent();
 
     try {
+        //事件统计
+        trackBuildEvent();
+        trackEvent();
+
         if (options.actualPlatform.toLowerCase() === 'android') {
             await _handleAndroid(options);
         } else if (options.actualPlatform.toLowerCase() === "ios") {
