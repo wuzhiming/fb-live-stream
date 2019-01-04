@@ -232,13 +232,17 @@ async function handleFiles(options, cb) {
 
 
     try {
-        //事件统计
-        trackBuildEvent();
-        trackEvent();
-
         if (options.actualPlatform.toLowerCase() === 'android') {
+            //事件统计
+            trackBuildEvent();
+            trackEvent();
+
             await _handleAndroid(options);
         } else if (options.actualPlatform.toLowerCase() === "ios") {
+            //事件统计
+            trackBuildEvent();
+            trackEvent();
+
             await _handleIOS(options);
         }
         cb && cb();
