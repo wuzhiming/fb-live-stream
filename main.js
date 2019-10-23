@@ -12,7 +12,7 @@ const {android, ios} = Editor.require('app://editor/core/native-packer');
  */
 async function _handleAndroid(options) {
     Editor.log('Facebook Live Stream --> adding ALive Stream Android support');
-    let config = Editor._projectProfile.data['facebook'];
+    let config = Editor._projectProfile.get('facebook');
 
     let androidPacker = new android(options);
 
@@ -90,7 +90,7 @@ function _copyFsupportFile(options, packer) {
  */
 async function _handleIOS(options) {
     Editor.log('Facebook Live Stream --> adding ALive Stream iOS support');
-    let config = Editor._projectProfile.data['facebook'];
+    let config = Editor._projectProfile.get('facebook');
 
     let iosPacker = new ios(options);
 
@@ -206,7 +206,7 @@ function _addStringIfNotExist(content, str, reg, tabNum) {
 }
 
 function trackEvent() {
-    let config = Editor._projectProfile.data['facebook'];
+    let config = Editor._projectProfile.get('facebook');
     if (!config.appID) return;
     Editor.Metrics.trackEvent({
         category: 'Facebook',
@@ -224,7 +224,7 @@ function trackBuildEvent() {
 }
 
 async function handleFiles(options, cb) {
-    let config = Editor._projectProfile.data['facebook'];
+    let config = Editor._projectProfile.get('facebook');
     if (!config || !config.enable || !config.live.enable) {
         cb && cb();
         return;
